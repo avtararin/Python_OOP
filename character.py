@@ -1,3 +1,6 @@
+from exceptions import KillingDeadError, LowHakiError
+#Character classes with child classes - Marine, Pirate, Cipher_pol_0
+
 class Character:
     def __init__(self, health, damage, haki, name):
         self.__health = health
@@ -12,26 +15,36 @@ class Character:
         self.__health = health
     
     def attack(self, target):
-        if self.haki < target.haki:
-            print("{} cannot defeat {} cause his haki weaker".format(self.name, target.name))
-        else:
-            target.receive_damage(self.damage)
-        if target.get_health() <= 0:
+        try:
+            self.target_alive(target)
+            self.haki_comprahasion(target)
+            if self.haki < target.haki:
+                print("{} cannot defeat {} cause his haki weaker".format(self.name, target.name))
+            else:
+                target.receive_damage(self.damage)
+            if target.get_health() <= 0:
                 print("{} defeated the {}".format(self.name, target.name))
-    
+        except KillingDeadError:
+            print("You cannot attack dead targets!")
+        except LowHakiError:
+            print("{}'s haki more powerful then yours you cannot attack".format(target.name))
     def receive_damage(self, damage):
         self.__health -= damage
     
     def __eq__(self, other):
-        return self.__health == other.get_health()
+        return self.get_health == other.get_health()
+    def target_alive(self, target):
+        if target.get_health() <= 0:
+            raise KillingDeadError("{} is dead, you cannot attack dead".format(target.name))
+    def haki_comprahasion(self, target):
+        if target.haki > self.haki:
+            raise LowHakiError("{}'s haki more powerful then yours you cannot attack".format(target.name))
 
 
 class Marine(Character):
     def __init__(self, health, damage, haki, name, rank):
         super().__init__(health, damage, haki, name)
         self.rank = rank
-    def attack(self, target):
-        super().attack(target)
 
 
 class Pirate(Character):
@@ -71,29 +84,4 @@ class Cipher_pol_0(Character):
 class Weapon:
     def __init__(self, name, damage):
         self.name = name
-        self.damage = damage
-
-
-class Singleton(type):
-    _instances = {}
-    
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        
-        return cls._instances[cls]
-
-
-if __name__ == "__main__":
-    Garp = Marine(300, 80, 1000,"Garp", "Vice-admiral")
-    Luffy = Pirate(400, 100, 1500, "Luffy", 3000000000)
-    Lucci = Cipher_pol_0(250, 15, 500,  "Rob Lucci")
-    
-    sword = Weapon("Sword", 10)
-    Luffy.set_weapon(sword)
-    
-    Lucci.set_rokusiki("Tekkay")
-    
-    Garp.attack(Luffy)
-    Luffy.attack(Lucci)
-    Lucci.attack(Garp)
+        self.damage = damage                            
